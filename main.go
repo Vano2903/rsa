@@ -75,7 +75,7 @@ func (ent *entity) generateKeys() error {
 func (ent entity) encrypt(toEncrypt []byte) []byte {
 	var result []byte
 	for _, b := range toEncrypt {
-		result = append(result, byte(int(b)^ent.PrivateKey%ent.N))
+		result = append(result, byte((int(b)^ent.PrivateKey)%ent.N))
 	}
 	return result
 }
@@ -97,6 +97,6 @@ func main() {
 	}
 
 	fmt.Println("encrypting message")
-	result := e.encrypt([]byte{'c', 'c'})
+	result := e.encrypt([]byte{'a', 'b'})
 	fmt.Println("encrypted message:", result)
 }
