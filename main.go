@@ -4,7 +4,9 @@ import (
 	"crypto/rand"
 	"fmt"
 	"log"
-
+	"bufio"
+	"os"
+	
 	"github.com/fxtlabs/primes"
 )
 
@@ -40,7 +42,7 @@ func (ent *entity) generateKeys() error {
 		φ := (p - 1) * (q - 1)
 		for i := φ - 1; ; i-- {
 			if primes.Coprime(φ, i) {
-				fmt.Println("found e:", i)
+				fmt.Println("e:", i)
 				e = i
 				break
 			}
@@ -48,10 +50,9 @@ func (ent *entity) generateKeys() error {
 
 		for i := 0; i < φ*φ; i++ {
 			res := (i * e) % φ
-			// fmt.Println("resto:", res)
 			if res == 1 && i != e { //
 				d = i
-				fmt.Println("found d:", d)
+				fmt.Println("d:", d)
 				found = true
 				break
 			}
@@ -65,6 +66,7 @@ func (ent *entity) generateKeys() error {
 	ent.PrivateKey = e
 	ent.PublicKey = d
 
+	fmt.Println("-------------------------------")
 	fmt.Println("n:", ent.N)
 	fmt.Println("private key:", ent.PrivateKey)
 	fmt.Println("public key:", ent.PublicKey)
@@ -80,8 +82,16 @@ func (ent entity) encrypt(toEncrypt []byte) []byte {
 	return result
 }
 
+func (ent entity) decrypt(toDecrypt []byte) []byte {
+	var result []byte
+	for _, b := range toDecrypt {
+		result = append(result, byte((int(b)^ent.PrivateKey)%ent.N))
+	}
+	return result
+}
+
 func getPrimeNumber() (int, error) {
-	n, err := rand.Prime(rand.Reader, 7)
+	n, err := rand.Prime(rand.Reader, 12)
 	if err != nil {
 		return 0, err
 	}
@@ -96,7 +106,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("encrypting message")
-	result := e.encrypt([]byte{'a', 'b'})
-	fmt.Println("encrypted message:", result)
+	fmt.Println("-------------------------------")
+	fmt.Print("message to ecrypt:")
+	in := bufio.NewReader(os.Stdin)
+	message, err := in.ReadString('\n')
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println()
+	result := e.encrypt([]byte(message))
+	fmt.Println("encrypted message:", string(result))
+
+	result = e.decrypt(result)
+	fmt.Println("decrypted message:", string(result))
 }
